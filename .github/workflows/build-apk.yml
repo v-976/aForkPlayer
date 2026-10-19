@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -46,3 +46,20 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish APK as GitHub pre-release
+        if: success()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          apk="$(find app/build/outputs/apk/debug -maxdepth 1 -type f -name '*.apk' -print -quit)"
+          test -n "$apk"
+          cp "$apk" aForkPlayer-debug.apk
+          tag="debug-build-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" aForkPlayer-debug.apk \
+            --target "$GITHUB_SHA" \
+            --title "aForkPlayer debug build #${GITHUB_RUN_NUMBER}" \
+            --notes "Automatically built from the fork. Unsigned-for-distribution debug APK; installation and runtime compatibility have not been verified." \
+            --prerelease
