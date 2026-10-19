@@ -165,13 +165,13 @@ class FullscreenActivity : AppCompatActivity() {
             settings.mediaPlaybackRequiresUserGesture = false
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            WebView.setWebContentsDebuggingEnabled(true)
+            WebView.setWebContentsDebuggingEnabled(false)
         }
         if (Build.VERSION.SDK_INT > 15) {
             settings.allowUniversalAccessFromFileURLs = true
             settings.allowFileAccessFromFileURLs = true
         }
-        if (Build.VERSION.SDK_INT > 25) settings.safeBrowsingEnabled = false
+        if (Build.VERSION.SDK_INT > 25) settings.safeBrowsingEnabled = true
         settings.javaScriptEnabled = true
         settings.domStorageEnabled = true
         print("SDK INT="+Build.VERSION.SDK_INT)
