@@ -92,7 +92,7 @@ class FullscreenActivity : AppCompatActivity() {
         return super.onKeyLongPress(keyCode, event)
     }
 
-    override fun dispatchKeyEvent(e: KeyEvent?): Boolean {
+    override fun dispatchKeyEvent(e: KeyEvent): Boolean {
         if (e?.keyCode == KeyEvent.KEYCODE_BACK)
         {
             println("dispatchKeyEvent KEYCODE_BACK")
@@ -219,18 +219,18 @@ class FullscreenActivity : AppCompatActivity() {
         mVisible = true
 
         val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onLongPress(e: MotionEvent?) {
+            override fun onLongPress(e: MotionEvent) {
                 Log.d("myApp", "onLongPress")
                 view.loadUrl("javascript: keyHandler({'keycode':VK_RED});");
             }
-            override fun onDoubleTap(e: MotionEvent?): Boolean {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
                 Log.d("myApp", "double tap")
                 view.loadUrl("javascript: keyHandler({'keycode':VK_ENTER});");
                 return true
             }
             var x1=0
 
-            override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+            override fun onScroll(e1: MotionEvent?, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
                 x1++
                 println("OnScroll " + distanceX + "/" + distanceY);
                 if (distanceX > 15)
@@ -265,7 +265,7 @@ class FullscreenActivity : AppCompatActivity() {
         // while interacting with the UI.
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration?) {
+    override fun onConfigurationChanged(newConfig: Configuration) {
         view.loadUrl("javascript: document.getElementsByTagName('body')[0].dispatchEvent(new KeyboardEvent('keydown',{'key':' '}));")
         super.onConfigurationChanged(newConfig)
     }
