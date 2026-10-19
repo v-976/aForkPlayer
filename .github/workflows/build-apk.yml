@@ -24,9 +24,10 @@ jobs:
         shell: bash
         run: |
           echo "y" | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platforms;android-28" "build-tools;28.0.3"
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"
 
       - name: Set up JDK 8 for legacy Gradle
+        if: github.ref_name == 'master'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -48,7 +49,7 @@ jobs:
           retention-days: 14
 
       - name: Publish APK as GitHub pre-release
-        if: success()
+        if: success() && github.ref_name == 'master'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
