@@ -5,6 +5,13 @@ apply plugin: 'kotlin-android'
 
 android {
     namespace 'aforkplayer.aforkplayer'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
     compileSdkVersion 34
     defaultConfig {
         applicationId "aforkplayer.aforkplayer"
