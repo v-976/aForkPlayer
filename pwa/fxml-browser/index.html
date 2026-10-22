@@ -34,6 +34,14 @@ function makeCard(entry,base){
   if(isSearchUrl(raw)){const q=prompt("Поиск: "+title);if(q===null||!q.trim())return;const u=normalize(raw.replace(/\{search\}/g,encodeURIComponent(q.trim())),base);if(u&&u.protocol==="https:"&&u.hostname==="cloud.fxmlparsers.in.net")openCatalog(u.href,true,"Поиск: "+q.trim());else line("Поисковый адрес недоступен по HTTPS.","warn");return}
   if(!raw||isCommand(raw)){line("Служебный элемент FXML. Код портала не выполняется.","warn");return}
   const u=normalize(raw,base);if(!u){line("Некорректный адрес.","warn");return}
+  if(["youtube.com","www.youtube.com","m.youtube.com","youtu.be"].includes(u.hostname)){
+   const id=u.hostname==="youtu.be"?u.pathname.slice(1):u.searchParams.get("v");
+   if(!id||!/^[a-zA-Z0-9_-]{11}$/.test(id)){line("Некорректная ссылка YouTube.","warn");return}
+   const target="https://www.youtube.com/watch?v="+encodeURIComponent(id);
+   line("Открываю оригинальный трейлер на YouTube.","ok");
+   window.location.assign(target);
+   return;
+  }
   if(stream||isVideo(u)){playVideo(stream||raw,title,base);return}
   if(u.protocol!=="https:"){line("HTTP-ссылка недоступна из защищённой PWA.","warn");return}
   if(u.hostname!=="cloud.fxmlparsers.in.net"){line("Внешний каталог пока не поддерживается: "+u.hostname,"warn");return}
