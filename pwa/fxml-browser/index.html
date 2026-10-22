@@ -6,7 +6,7 @@ const ROOT="https://cloud.fxmlparsers.in.net/";
 const heading=document.getElementById("heading"),status=document.getElementById("status"),items=document.getElementById("items"),back=document.getElementById("back"),searchBox=document.getElementById("searchBox"),search=document.getElementById("search"),debug=document.getElementById("debug");
 let history=[],active=ROOT,searchTemplate=null,sequence=0;
 const playerBox=document.getElementById("playerBox"),player=document.getElementById("player"),playerStatus=document.getElementById("playerStatus"),playerTitle=document.getElementById("playerTitle");
-function closePlayer(){player.pause();player.removeAttribute("src");player.load();playerBox.hidden=true}
+function closePlayer(){document.getElementById("youtubeFrame")?.remove();player.hidden=false;player.pause();player.removeAttribute("src");player.load();playerBox.hidden=true}
 document.getElementById("closePlayer").onclick=closePlayer;
 player.addEventListener("playing",()=>playerStatus.textContent="Воспроизведение началось.");
 player.addEventListener("error",()=>playerStatus.textContent="Safari не смог воспроизвести поток. Возможны ограничения сервера, формата или кодека.");
@@ -37,9 +37,14 @@ function makeCard(entry,base){
   if(["youtube.com","www.youtube.com","m.youtube.com","youtu.be"].includes(u.hostname)){
    const id=u.hostname==="youtu.be"?u.pathname.slice(1):u.searchParams.get("v");
    if(!id||!/^[a-zA-Z0-9_-]{11}$/.test(id)){line("Некорректная ссылка YouTube.","warn");return}
-   const target="https://www.youtube.com/watch?v="+encodeURIComponent(id);
-   line("Открываю оригинальный трейлер на YouTube.","ok");
-   window.location.assign(target);
+   closePlayer();playerBox.hidden=false;playerTitle.textContent=title;
+   playerStatus.textContent="Трейлер YouTube внутри aForkPlayer. Нажми Play.";
+   const frame=document.createElement("iframe");frame.id="youtubeFrame";
+   frame.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(id)+"?playsinline=1&rel=0";
+   frame.title=title;frame.allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share";
+   frame.allowFullscreen=true;frame.referrerPolicy="strict-origin-when-cross-origin";
+   frame.style.cssText="width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:black";
+   player.hidden=true;player.after(frame);playerBox.scrollIntoView({behavior:"smooth",block:"start"});
    return;
   }
   if(stream||isVideo(u)){playVideo(stream||raw,title,base);return}
