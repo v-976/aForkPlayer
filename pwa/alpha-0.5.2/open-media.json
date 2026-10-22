@@ -1,0 +1,20 @@
+{
+  "title": "Открытые демонстрационные видео",
+  "items": [
+    {
+      "title": "Цветы — MDN (MP4)",
+      "stream_url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+      "group": "MP4"
+    },
+    {
+      "title": "Big Buck Bunny — Blender Foundation (MP4)",
+      "stream_url": "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4",
+      "group": "MP4"
+    },
+    {
+      "title": "Apple HLS — BipBop (HLS)",
+      "stream_url": "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8",
+      "group": "HLS"
+    }
+  ]
+}
