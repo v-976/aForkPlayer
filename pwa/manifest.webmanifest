@@ -1,0 +1,11 @@
+{
+  "name": "ForkPlayer PWA Compatibility Test",
+  "short_name": "ForkPlayer Test",
+  "description": "iPhone/iPad playback compatibility prototype",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101828",
+  "theme_color": "#101828",
+  "lang": "ru"
+}
