@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101828"><title>ForkPlayer PWA Alpha 0.5</title>
+<style>
+:root{font:16px system-ui,-apple-system,sans-serif;color:#f4f7ff;background:#101828;color-scheme:dark}*{box-sizing:border-box}body{margin:0;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}main{max-width:960px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 0}h1{font-size:1.4rem;margin:0}h2{font-size:1.1rem;margin:0 0 12px}.muted{color:#afbed4;font-size:.88rem;line-height:1.5}button,input{font:inherit}button{border:0;border-radius:12px;padding:12px 15px;background:#293c59;color:#fff;cursor:pointer}button.primary{background:#5e8cff;color:#101828;font-weight:700}button:focus-visible,input:focus-visible{outline:3px solid #9fceff;outline-offset:2px}.bar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.card{background:#1c2a3e;border-radius:16px;padding:18px;margin:14px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}.tile{text-align:left;min-height:120px;display:flex;flex-direction:column;justify-content:space-between;background:#293d5c}.tile b{font-size:1.05rem}.tile small{color:#c3d1e7}input{width:100%;border:1px solid #667b98;border-radius:10px;padding:12px;background:#101828;color:#fff;font-size:16px;margin:7px 0 12px}label{display:block}.hidden{display:none!important}video{width:100%;aspect-ratio:16/9;background:black;border-radius:10px}.crumb{color:#bed1f0;margin:12px 0}.status{white-space:pre-wrap;color:#cbd8e9}footer{padding:16px 0 32px}
+</style></head><body><main>
+<header><h1>ForkPlayer <span class="muted">PWA Alpha 0.5</span></h1><button id="back" type="button" class="hidden">← Назад</button></header>
+<p class="muted">Браузерная адаптация структуры ForkPlayer. FXML/M3U/JSON: открытый портал и пользовательские источники. Не все ссылки оригинального ForkPlayer совместимы с Safari.</p>
+<div id="crumb" class="crumb">Главная</div>
+<section id="home" class="card"><h2>Главная</h2><div class="grid">
+<button class="tile" data-page="sources"><b>📺 Каталоги</b><small>Fork XML / M3U / JSON</small></button>
+<button class="tile" data-page="favorites"><b>★ Избранное</b><small>Сохранённые ссылки</small></button>
+<button class="tile" data-page="history"><b>◷ История</b><small>Недавно открытые</small></button>
+<button class="tile" data-page="links"><b>🔗 Мои ссылки</b><small>Добавить видео</small></button>
+<button class="tile" data-page="demo"><b>▶ Тестовое видео</b><small>MP4 · MDN</small></button>
+</div></section>
+<section id="sources" class="card hidden"><h2>Каталоги ForkPlayer</h2><p class="muted">Поддерживаются прямые HTTPS-ссылки на FXML/XML, M3U и JSON-порталы с доступом CORS. Можно также импортировать файл с устройства.</p><label for="sourceUrl">Адрес каталога<input id="sourceUrl" type="url" inputmode="url" placeholder="https://example.com/playlist.m3u"></label><div class="bar"><button id="fetchSource" class="primary" type="button">Открыть каталог</button><button id="sampleSource" type="button">Пример каталога</button><button id="realSource" type="button">Открытый FXML-портал</button></div><label for="sourceFile">Или выбрать локальный файл (.m3u, .xml, .json)<input id="sourceFile" type="file" accept=".m3u,.m3u8,.xml,.fxml,.json,.txt,text/plain,application/json,application/xml"></label><p id="sourceStatus" class="status" role="status"></p><div id="sourceItems" class="grid"></div></section>
+<section id="links" class="card hidden"><h2>Мои ссылки</h2><label for="title">Название<input id="title" maxlength="80" placeholder="Например, видео"></label><label for="address">Прямая HTTPS-ссылка на видео<input id="address" type="url" inputmode="url" placeholder="https://example.com/video.mp4"></label><button id="add" type="button" class="primary">Добавить</button><p id="editStatus" class="status" role="status"></p><div id="linkList" class="grid"></div></section>
+<section id="favorites" class="card hidden"><h2>Избранное</h2><div id="favoriteList" class="grid"></div></section>
+<section id="history" class="card hidden"><h2>История</h2><div id="historyList" class="grid"></div></section>
+<section id="player" class="card hidden"><h2 id="videoTitle">Плеер</h2><video id="video" controls playsinline webkit-playsinline preload="none"></video><p id="playStatus" class="status" role="status"></p><div class="bar"><button id="favorite" type="button">☆ В избранное</button><button id="stop" type="button">Остановить</button></div></section>
+<footer class="muted">Данные сохраняются только в браузере этого устройства. Нет аккаунтов, телеметрии, удалённых скриптов и Android-моста. Поддержка форматов зависит от Safari.</footer>
+</main><script>
+"use strict";
+const DEMO={id:"demo",title:"Цветы (MDN)",url:"https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"};
+const KEY="forkplayer-pwa-v03";
+let store={links:[],favorites:[],history:[]};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.links)&&Array.isArray(s.favorites)&&Array.isArray(s.history))store=s;}catch{}
+const $=id=>document.getElementById(id),pages=["home","links","favorites","history","sources","player"];
+let page="home",previous="home",current=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch{$("editStatus").textContent="Не удалось сохранить данные в браузере."}}
+function valid(u){try{const x=new URL(u);return x.protocol==="https:"&&!!x.hostname}catch{return false}}
+function navigate(next){if(next==="player")previous=page;page=next;pages.forEach(id=>$(id).classList.toggle("hidden",id!==next));$("back").classList.toggle("hidden",next==="home");$("crumb").textContent=({home:"Главная",links:"Главная / Мои ссылки",favorites:"Главная / Избранное",history:"Главная / История",sources:"Главная / Каталоги",player:"Главная / Плеер"})[next];if(next==="links")renderLinks();if(next==="favorites")renderFavorites();if(next==="history")renderHistory();}
+function itemButton(item,target){const b=document.createElement("button");b.type="button";b.className="tile";const name=document.createElement("b");name.textContent=item.title;const desc=document.createElement("small");desc.textContent="▶ Воспроизвести";b.append(name,desc);b.addEventListener("click",()=>openVideo(item));target.append(b);}
+function empty(target){if(!target.children.length){const p=document.createElement("p");p.className="muted";p.textContent="Пока пусто.";target.append(p)}}
+function renderLinks(){const box=$("linkList");box.replaceChildren();for(const item of store.links)itemButton(item,box);empty(box)}
+function resolve(id){return id==="demo"?DEMO:store.links.find(x=>x.id===id)||store.history.find(x=>x.id===id)}
+function renderFavorites(){const box=$("favoriteList");box.replaceChildren();for(const id of store.favorites){const item=resolve(id);if(item)itemButton(item,box)}empty(box)}
+function renderHistory(){const box=$("historyList");box.replaceChildren();for(const item of store.history)itemButton(item,box);empty(box)}
+function openVideo(item){if(!valid(item.url)){$("editStatus").textContent="Некорректный HTTPS-адрес.";return}current=item;navigate("player");$("videoTitle").textContent=item.title;const v=$("video");v.pause();v.removeAttribute("src");v.load();v.src=item.url;$("playStatus").textContent="Загрузка…";$("favorite").textContent=store.favorites.includes(item.id)?"★ Убрать из избранного":"☆ В избранное";store.history=[item,...store.history.filter(x=>x.id!==item.id)].slice(0,30);save();v.play().catch(()=>{$("playStatus").textContent="Нажмите Play в видеоплеере, если автозапуск запрещён."});}
+document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>b.dataset.page==="demo"?openVideo(DEMO):navigate(b.dataset.page)));
+$("back").addEventListener("click",()=>{if(page==="player"){$("video").pause();navigate(previous==="player"?"home":previous)}else navigate("home")});
+$("add").addEventListener("click",()=>{const title=$("title").value.trim(),url=$("address").value.trim();if(!title||!valid(url)){$("editStatus").textContent="Укажите название и прямую HTTPS-ссылку.";return}if(store.links.some(x=>x.url===url)){$("editStatus").textContent="Такая ссылка уже добавлена.";return}store.links.push({id:"local-"+Date.now()+"-"+Math.random().toString(36).slice(2),title,url});save();$("title").value="";$("address").value="";$("editStatus").textContent="Добавлено.";renderLinks()});
+$("favorite").addEventListener("click",()=>{if(!current)return;const i=store.favorites.indexOf(current.id);if(i<0)store.favorites.push(current.id);else store.favorites.splice(i,1);save();$("favorite").textContent=i<0?"★ Убрать из избранного":"☆ В избранное"});
+$("stop").addEventListener("click",()=>{$("video").pause();navigate(previous==="player"?"home":previous)});
+$("video").addEventListener("playing",()=>$("playStatus").textContent="Воспроизведение началось.");
+$("video").addEventListener("error",()=>$("playStatus").textContent="Не удалось воспроизвести. Проверьте адрес, сервер и формат.");
+
+const sourceStatus=$("sourceStatus"),sourceItems=$("sourceItems");
+const sampleText='#EXTM3U\n#EXTINF:-1 group-title="Демо",Цветы (MDN)\nhttps://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
+let sourceBase="",sourceDepth=0;
+function absolute(raw,base){try{return new URL(raw,base||location.href).href}catch{return ""}}
+function parseSource(raw,base){
+ const t=raw.trim();let entries=[];
+ if(t.startsWith("#EXTM3U")){
+ let name="",group="";for(const line of t.split(/\r?\n/)){const v=line.trim();if(v.startsWith("#EXTINF:")){name=v.split(",").slice(1).join(",").trim()||"Видео";group=(v.match(/group-title="([^"]*)"/)||[])[1]||"";}else if(v&&!v.startsWith("#")){entries.push({title:name||v,url:absolute(v,base),kind:/\.(m3u|xml|fxml|json)(?:[?#]|$)/i.test(v)?"catalog":"video",group});name="";group="";}}
+ }else if(t.startsWith("<")){
+ const doc=new DOMParser().parseFromString(t,"application/xml");if(doc.querySelector("parsererror"))throw Error("Ошибка XML");
+ for(const node of doc.querySelectorAll("channel")){const value=tag=>node.querySelector(tag)?.textContent?.trim()||"";const nested=value("playlist_url"),stream=value("stream_url");if(nested||stream)entries.push({title:value("title")||"Без названия",url:absolute(nested||stream,base),kind:nested?"catalog":"video",group:value("category")});}
+ }else{
+ const obj=JSON.parse(t);const items=Array.isArray(obj)?obj:Array.isArray(obj.channels)?obj.channels:Array.isArray(obj.items)?obj.items:[];for(const x of items){if(!x||typeof x!=="object")continue;const nested=x.playlist_url,stream=x.stream_url||x.url;if(typeof (nested||stream)!=="string")continue;entries.push({title:String(x.title||x.name||"Без названия"),url:absolute(nested||stream,base),kind:nested?"catalog":"video",group:String(x.group||"")});}
+ }
+ return entries.filter(x=>x.url.startsWith("https:")).slice(0,1000);
+}
+function showEntries(entries,base){sourceItems.replaceChildren();sourceStatus.textContent="Элементов: "+entries.length+(entries.length?"":" — проверьте формат и HTTPS-адреса.");for(const item of entries){const b=document.createElement("button");b.type="button";b.className="tile";const label=document.createElement("b");label.textContent=(item.kind==="catalog"?"📁 ":"▶ ")+item.title;const hint=document.createElement("small");hint.textContent=item.group|| (item.kind==="catalog"?"Открыть вложенный каталог":"Воспроизвести");b.append(label,hint);b.addEventListener("click",()=>{if(item.kind==="catalog")loadSource(item.url);else openVideo({id:"source-"+item.url,title:item.title,url:item.url})});sourceItems.append(b);}}
+async function loadSource(link){if(!valid(link)){sourceStatus.textContent="Требуется прямая HTTPS-ссылка.";return}sourceStatus.textContent="Загрузка каталога…";sourceItems.replaceChildren();try{const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);let response;try{response=await fetch(link,{signal:controller.signal,credentials:"omit"})}finally{clearTimeout(timeout)}if(!response.ok)throw Error("HTTP "+response.status);const size=Number(response.headers.get("content-length")||0);if(size>2000000)throw Error("Каталог больше 2 МБ");const data=await response.text();if(data.length>2000000)throw Error("Каталог больше 2 МБ");showEntries(parseSource(data,link),link)}catch(e){sourceStatus.textContent="Не удалось открыть каталог: "+e.message+". Возможны CORS, ограничения сервера или неподдерживаемый формат. Можно импортировать файл вручную.";}}
+$("fetchSource").addEventListener("click",()=>loadSource($("sourceUrl").value.trim()));
+$("sampleSource").addEventListener("click",()=>{showEntries(parseSource(sampleText,location.href),location.href)});
+$("realSource").addEventListener("click",()=>{const link="https://raw.githubusercontent.com/vengo634/fxmlparsers/master/index";$("sourceUrl").value=link;loadSource(link)});
+
+$("sourceFile").addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>2000000){sourceStatus.textContent="Максимальный размер 2 МБ.";return}try{showEntries(parseSource(await file.text(),location.href),location.href)}catch(err){sourceStatus.textContent="Ошибка чтения каталога: "+err.message}});
+</script></body></html>
