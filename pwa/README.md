@@ -1,0 +1,4 @@
+# ForkPlayer PWA — compatibility prototype
+This is a standalone iOS/iPadOS playback and installation test, **not** the complete ForkPlayer application. It intentionally does not execute the legacy remote JavaScript loader or expose the Android JavaScript bridge.
+Serve `pwa/` over HTTPS (for example GitHub Pages configured to publish `/pwa` via a workflow) or localhost. Test direct HTTPS MP4/HLS URLs on iPhone/iPad. No video URLs are stored or sent to a project backend; requests go directly to the provided video host. No third-party JS dependencies. No App Store required.
+Known limits: Safari codec/protocol support; CORS, cross-origin redirects, authorization, and HTTP mixed-content restrictions; no ForkPlayer catalog, plugins or Android bridge. PWA icon assets and automated deployment not yet configured.
